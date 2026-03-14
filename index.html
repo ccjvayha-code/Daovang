@@ -1,0 +1,444 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+  <title>Gom Xu Đào Vàng</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <script src="https://cdn.tailwindcss.com"></script>
+  <style>
+    body { 
+      background: linear-gradient(180deg, #10b981, #eab308); 
+      font-family: system-ui, -apple-system, sans-serif; 
+      font-size: 0.95rem; 
+      line-height: 1.4;
+    }
+    .card { background: rgba(255,255,255,0.18); backdrop-filter: blur(12px); border-radius: 20px; }
+    .tab-active { background: #f59e0b; color: black; font-weight: 700; box-shadow: 0 4px 12px rgba(245,158,11,0.4); }
+    .gold { color: #fcd34d; text-shadow: 0 0 12px #fcd34d; }
+    .diamond { color: #67e8f9; text-shadow: 0 0 12px #67e8f9; }
+    .popup { animation: popupAnim 0.4s ease-out forwards; }
+    @keyframes popupAnim { from { transform: scale(0.8) translateY(60px); opacity: 0; } to { transform: scale(1) translateY(0); opacity: 1; } }
+    .nav-icon { font-size: 1.5rem; }
+    input, button, select { font-size: 1rem !important; padding: 0.8rem; }
+    h1, h2 { font-size: 1.7rem; }
+    .text-xl { font-size: 1.15rem; }
+    .text-2xl { font-size: 1.35rem; }
+    .text-3xl { font-size: 1.6rem; }
+    .history-item { border-bottom: 1px solid rgba(255,255,255,0.2); padding: 10px 0; }
+    .status-pending { color: #fbbf24; }
+    .status-success { color: #10b981; }
+    .status-failed  { color: #ef4444; }
+    .min-warning { background: rgba(239,68,68,0.2); border: 1px solid #ef4444; color: #fee2e2; }
+  </style>
+</head>
+<body class="text-white min-h-screen pb-20">
+
+  <!-- HEADER -->
+  <div class="flex items-center justify-between px-4 py-3 bg-black/30">
+    <div class="flex items-center gap-2.5">
+      <div class="w-12 h-12 bg-orange-500 rounded-xl flex items-center justify-center text-3xl shadow-lg">⛏️</div>
+      <div>
+        <p id="playerName" class="text-2xl font-bold">Người Chơi</p>
+        <p class="text-xs opacity-80">Lv. <span id="level">1</span> • Thợ Đào</p>
+      </div>
+    </div>
+    <div class="flex gap-4">
+      <div class="diamond text-xl font-bold">💎 <span id="kimcuong">1000</span></div>
+      <div class="gold text-xl font-bold">🪙 <span id="vang">1000000</span></div>
+    </div>
+  </div>
+
+  <!-- TAB CONTENTS -->
+  <div class="px-4 py-3">
+
+    <!-- TAB 0: KHAI THÁC -->
+    <div id="tab0" class="tab-content">
+      <div class="text-center py-8">
+        <div class="text-8xl mb-5">⛏️</div>
+        <h1 class="text-4xl font-bold gold">Khai Thác Vàng</h1>
+        <p class="text-lg mt-2">Tốc độ: <span id="speed" class="font-bold">8.00</span> vàng/giây</p>
+      </div>
+
+      <div id="miningBox" class="hidden card p-6 text-center mb-6">
+        <p class="text-base opacity-80">Thời gian khai thác còn lại</p>
+        <div id="countdown" class="text-5xl font-mono font-bold text-yellow-300 mt-2">12:00:00</div>
+      </div>
+
+      <button onclick="startMining()" id="btnStart" 
+              class="w-full py-6 text-2xl font-bold bg-green-600 hover:bg-green-700 rounded-2xl shadow-xl">BẮT ĐẦU KHAI THÁC</button>
+
+      <button onclick="upgradeMiner()" 
+              class="mt-5 w-full py-5 text-xl font-bold bg-yellow-400 text-black rounded-2xl">NÂNG CẤP THỢ ĐÀO (5.000 💎)</button>
+    </div>
+
+    <!-- TAB 1: QUY ĐỔI -->
+    <div id="tab1" class="tab-content hidden">
+      <div class="card p-6">
+        <h2 class="text-3xl font-bold text-center mb-6">Quy Đổi Vàng Sang Kim Cương</h2>
+        <input id="vangQuyDoi" type="number" placeholder="Nhập số vàng" class="w-full p-5 text-xl text-black rounded-2xl text-center mb-4">
+        <p class="text-center text-base mt-2">Tỷ lệ: 125 vàng = 1 kim cương</p>
+        <button onclick="quyDoi()" class="mt-6 w-full py-6 text-2xl font-bold bg-yellow-400 text-black rounded-2xl">XÁC NHẬN QUY ĐỔI</button>
+
+        <div class="mt-10 border-t border-white/30 pt-6">
+          <h3 class="text-xl font-bold mb-4 text-center">Nhập mã mời (nếu có)</h3>
+          <input id="referralCode" type="text" placeholder="VD: 7980720900 hoặc ABC123" class="w-full p-5 text-xl text-black rounded-2xl text-center">
+          <button onclick="submitReferral()" class="mt-4 w-full py-5 text-xl font-bold bg-purple-600 rounded-2xl">ÁP DỤNG MÃ MỜI</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 2: NHIỆM VỤ -->
+    <div id="tab2" class="tab-content hidden">
+      <div class="space-y-5">
+        <div class="card p-5 flex justify-between items-center">
+          <div>Săn App free</div>
+          <div class="text-green-400 font-bold">+1.500 💎</div>
+          <button onclick="claimTask(0)" class="bg-green-500 px-6 py-2.5 rounded-xl text-sm">Tham gia</button>
+        </div>
+        <div class="card p-5 flex justify-between items-center">
+          <div>Cây Thần Tài</div>
+          <div class="text-green-400 font-bold">+1.500 💎</div>
+          <button onclick="claimTask(1)" class="bg-green-500 px-6 py-2.5 rounded-xl text-sm">Tham gia</button>
+        </div>
+        <div class="card p-5 flex justify-between items-center">
+          <div>Share kèo free 2026</div>
+          <div class="text-green-400 font-bold">+1.500 💎</div>
+          <button onclick="claimTask(2)" class="bg-green-500 px-6 py-2.5 rounded-xl text-sm">Tham gia</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 3: MỜI BẠN BÈ -->
+    <div id="tab3" class="tab-content hidden">
+      <div class="card p-6 text-center">
+        <h2 class="text-3xl font-bold mb-5">Mời Bạn Bè</h2>
+        <p class="text-base mb-4">Giới thiệu thành công nhận ngay <strong>300.000 vàng</strong> + <strong>1.000 kim cương</strong> mỗi người</p>
+
+        <div class="bg-white/25 p-4 rounded-2xl text-base font-mono break-all mb-5" id="inviteLink">
+          https://t.me/GomXu_Bot/miniApp?startapp=...
+        </div>
+
+        <button onclick="copyInvite()" class="w-full py-5 bg-blue-600 text-xl font-bold rounded-2xl mb-6">COPY LINK MỜI</button>
+
+        <div class="bg-black/30 p-5 rounded-2xl text-left space-y-3 text-base">
+          <p><strong>Số người mời được:</strong> <span id="refCount">0</span> người</p>
+          <p><strong>Tổng vàng hoa hồng:</strong> <span id="refGold">0</span> 🪙</p>
+          <p><strong>Tổng kim cương hoa hồng:</strong> <span id="refDiamond">0</span> 💎</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 4: RÚT TIỀN -->
+    <div id="tab4" class="tab-content hidden">
+      <div class="card p-6">
+        <h2 class="text-3xl font-bold text-center mb-6">Rút Tiền</h2>
+        
+        <div class="flex gap-3 mb-6">
+          <button onclick="switchWithdrawTab(0)" id="btnBankTab" class="flex-1 py-3 bg-yellow-400 text-black font-bold rounded-2xl">Ngân Hàng</button>
+          <button onclick="switchWithdrawTab(1)" id="btnWalletTab" class="flex-1 py-3 bg-white/30 rounded-2xl">Ví Điện Tử</button>
+        </div>
+
+        <div class="min-warning p-4 rounded-2xl text-center mb-6 flex items-center justify-center gap-3 text-lg font-bold">
+          <span class="text-2xl">⚠️</span> TỐI THIỂU 10.000.000 VÀNG
+        </div>
+
+        <div id="withdrawBankForm">
+          <input id="bankName" placeholder="Ngân hàng (MBBank, Vietcombank...)" class="w-full p-4 rounded-2xl text-black mb-3">
+          <input id="accountNumber" placeholder="Số tài khoản" class="w-full p-4 rounded-2xl text-black mb-3">
+          <input id="accountName" placeholder="Tên chủ tài khoản" class="w-full p-4 rounded-2xl text-black">
+        </div>
+
+        <div id="withdrawWalletForm" class="hidden">
+          <select id="walletType" class="w-full p-4 rounded-2xl text-black mb-3">
+            <option>Momo</option>
+            <option>ZaloPay</option>
+          </select>
+          <input id="phoneWallet" placeholder="Số điện thoại ví" class="w-full p-4 rounded-2xl text-black">
+        </div>
+
+        <input id="amountRut" type="number" placeholder="Nhập số vàng rút" class="w-full mt-4 p-5 text-xl text-black rounded-2xl text-center">
+
+        <button onclick="submitRutTien()" 
+                class="mt-6 w-full py-6 text-2xl font-bold bg-orange-500 rounded-2xl shadow-xl">RÚT TIỀN NGAY</button>
+      </div>
+    </div>
+
+    <!-- TAB 5: LỊCH SỬ RÚT -->
+    <div id="tab5" class="tab-content hidden">
+      <div class="card p-6">
+        <h2 class="text-3xl font-bold text-center mb-6">Lịch Sử Rút Tiền</h2>
+        <div id="withdrawHistoryList" class="space-y-4 text-sm">
+          <!-- Render bằng JS -->
+        </div>
+      </div>
+    </div>
+
+    <!-- TAB 6: THÔNG BÁO (giữ code nhưng ẩn tab bằng cách không hiển thị nút nav) -->
+
+  </div>
+
+  <!-- BOTTOM NAV - XÓA NÚT TAB THÔNG BÁO -->
+  <div class="fixed bottom-0 left-0 right-0 bg-black/90 flex justify-around py-3 text-xs">
+    <button onclick="openTab(0)" class="flex flex-col items-center tab-active"><span class="nav-icon">⛏️</span><br>Khai Thác</button>
+    <button onclick="openTab(1)" class="flex flex-col items-center"><span class="nav-icon">🔄</span><br>Quy Đổi</button>
+    <button onclick="openTab(2)" class="flex flex-col items-center"><span class="nav-icon">📋</span><br>Nhiệm Vụ</button>
+    <button onclick="openTab(3)" class="flex flex-col items-center"><span class="nav-icon">👥</span><br>Mời Bạn</button>
+    <button onclick="openTab(4)" class="flex flex-col items-center"><span class="nav-icon">💰</span><br>Rút Tiền</button>
+    <button onclick="openTab(5)" class="flex flex-col items-center"><span class="nav-icon">📜</span><br>Lịch Sử</button>
+    <!-- Không còn nút Thông Báo nữa -->
+  </div>
+
+  <!-- POPUP RÚT TIỀN -->
+  <div id="withdrawPopup" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center popup z-50">
+    <div class="bg-gradient-to-b from-green-700 to-green-900 text-white rounded-3xl p-8 w-11/12 max-w-sm text-center shadow-2xl border-4 border-green-400">
+      <div class="text-6xl mb-4">✅</div>
+      <h2 class="text-3xl font-bold mb-4">ĐÃ GỬI THÀNH CÔNG!</h2>
+      <p class="text-lg mb-6 opacity-90">Yêu cầu rút tiền đã được gửi.<br>Admin sẽ duyệt trong <strong>24 - 48 giờ</strong>.</p>
+      <button onclick="closePopup()" class="w-full py-5 bg-white text-green-800 text-2xl font-bold rounded-2xl shadow-lg hover:bg-gray-100">ĐÓNG</button>
+    </div>
+  </div>
+
+  <!-- POPUP MÃ MỜI -->
+  <div id="referralPopup" class="hidden fixed inset-0 bg-black/80 flex items-center justify-center popup z-50">
+    <div id="referralPopupContent" class="rounded-3xl p-8 w-11/12 max-w-sm text-center shadow-2xl border-4">
+      <div id="referralIcon" class="text-6xl mb-4"></div>
+      <h2 id="referralTitle" class="text-3xl font-bold mb-4"></h2>
+      <p id="referralMessage" class="text-lg mb-6 opacity-90"></p>
+      <button onclick="closeReferralPopup()" class="w-full py-5 bg-white text-black text-2xl font-bold rounded-2xl shadow-lg hover:bg-gray-100">ĐÓNG</button>
+    </div>
+  </div>
+
+  <!-- POPUP CẢNH BÁO QUAN TRỌNG KHI VÀO LẠI (mới thêm) -->
+  <div id="warningPopup" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50">
+    <div class="bg-gradient-to-b from-gray-900 to-gray-800 text-white rounded-3xl p-8 w-11/12 max-w-md text-center shadow-2xl border-4 border-yellow-500">
+      <div class="text-7xl mb-6">⚠️</div>
+      <h2 class="text-3xl font-bold mb-6 text-yellow-400">CẢNH BÁO QUAN TRỌNG!</h2>
+      <p class="text-lg mb-4 leading-relaxed">
+        Mỗi thiết bị chỉ được dùng <strong>1 tài khoản duy nhất</strong>.<br><br>
+        Tạo nhiều tài khoản hoặc gian lận sẽ bị <strong>khóa vĩnh viễn</strong> và từ chối tất cả đơn rút tiền!
+      </p>
+      <p class="text-base mb-8 opacity-90">
+        Đơn rút tiền sẽ được duyệt trong vòng <strong>24-48 giờ</strong>. Vui lòng kiên nhẫn chờ thông báo.
+      </p>
+      <button onclick="closeWarningPopup()" class="w-full py-5 bg-green-600 text-white text-2xl font-bold rounded-2xl shadow-lg hover:bg-green-700">ĐÃ HIỂU</button>
+    </div>
+  </div>
+
+  <script>
+    let user = Telegram.WebApp.initDataUnsafe.user || {id: 123456, first_name: "Người Chơi"};
+    document.getElementById("playerName").innerText = user.first_name;
+
+    let miningTimer = null;
+    let miningStartTime = null;
+    let currentGold = 1000000;
+    let miningSpeed = 8.00;
+
+    function openTab(n) {
+      document.querySelectorAll('.tab-content').forEach(el => el.classList.add('hidden'));
+      document.getElementById('tab' + n).classList.remove('hidden');
+      document.querySelectorAll('.flex.flex-col').forEach(btn => btn.classList.remove('tab-active'));
+      event.currentTarget.classList.add('tab-active');
+      if (n === 3) loadReferralStats();
+      if (n === 5) loadWithdrawHistory();
+    }
+
+    function startMining() { /* giữ nguyên như cũ */ 
+      if (miningTimer) return;
+      Telegram.WebApp.sendData(JSON.stringify({action: "start_mining", user_id: user.id}));
+      miningStartTime = Date.now();
+      document.getElementById("miningBox").classList.remove("hidden");
+      document.getElementById("btnStart").innerText = "ĐANG KHAI THÁC...";
+      document.getElementById("btnStart").disabled = true;
+
+      miningTimer = setInterval(() => {
+        const elapsedMs = Date.now() - miningStartTime;
+        const elapsedSec = Math.floor(elapsedMs / 1000);
+        const remainingSec = 12 * 3600 - elapsedSec;
+
+        if (remainingSec <= 0) {
+          clearInterval(miningTimer);
+          miningTimer = null;
+          document.getElementById("miningBox").classList.add("hidden");
+          document.getElementById("btnStart").innerText = "BẮT ĐẦU KHAI THÁC";
+          document.getElementById("btnStart").disabled = false;
+          alert("Đã khai thác xong 12 giờ!");
+          return;
+        }
+
+        const hours = Math.floor(remainingSec / 3600);
+        const mins  = Math.floor((remainingSec % 3600) / 60);
+        const secs  = remainingSec % 60;
+        document.getElementById("countdown").innerText = 
+          `${hours.toString().padStart(2,'0')}:${mins.toString().padStart(2,'0')}:${secs.toString().padStart(2,'0')}`;
+
+        currentGold += miningSpeed;
+        document.getElementById("vang").innerText = Math.floor(currentGold).toLocaleString();
+      }, 1000);
+    }
+
+    function upgradeMiner() { /* giữ nguyên */ 
+      Telegram.WebApp.sendData(JSON.stringify({action: "upgrade", user_id: user.id}));
+      miningSpeed += 1.0;
+      document.getElementById("speed").innerText = miningSpeed.toFixed(2);
+    }
+
+    function quyDoi() { /* giữ nguyên */ 
+      let amount = parseInt(document.getElementById("vangQuyDoi").value) || 0;
+      Telegram.WebApp.sendData(JSON.stringify({action: "quydoi", user_id: user.id, amount: amount}));
+    }
+
+    function switchWithdrawTab(n) { /* giữ nguyên */ 
+      document.getElementById("withdrawBankForm").classList.toggle("hidden", n !== 0);
+      document.getElementById("withdrawWalletForm").classList.toggle("hidden", n !== 1);
+    }
+
+    function submitRutTien() { /* giữ nguyên */ 
+      let amount = parseInt(document.getElementById("amountRut").value) || 0;
+      if (amount < 10000000) {
+        alert("❌ Số vàng rút phải từ 10.000.000 trở lên!");
+        return;
+      }
+
+      const method = document.getElementById("btnBankTab").classList.contains("bg-yellow-400") ? "Ngân Hàng" : "Ví Điện Tử";
+
+      const withdrawData = {
+        action: "withdraw",
+        user_id: user.id,
+        amount: amount,
+        method: method,
+        timestamp: Date.now(),
+        status: "pending"
+      };
+
+      Telegram.WebApp.sendData(JSON.stringify(withdrawData));
+
+      let history = JSON.parse(localStorage.getItem("withdrawHistory") || "[]");
+      history.push(withdrawData);
+      localStorage.setItem("withdrawHistory", JSON.stringify(history));
+
+      document.getElementById("withdrawPopup").classList.remove("hidden");
+    }
+
+    function closePopup() { /* giữ nguyên */ 
+      document.getElementById("withdrawPopup").classList.add("hidden");
+    }
+
+    function showReferralPopup(success, message) { /* giữ nguyên */ 
+      const popup = document.getElementById("referralPopup");
+      const content = document.getElementById("referralPopupContent");
+      const icon = document.getElementById("referralIcon");
+      const title = document.getElementById("referralTitle");
+      const msg = document.getElementById("referralMessage");
+
+      if (success) {
+        content.className = "bg-gradient-to-b from-green-700 to-green-900 text-white rounded-3xl p-8 w-11/12 max-w-sm text-center shadow-2xl border-4 border-green-400";
+        icon.innerHTML = "✅";
+        title.innerHTML = "THÀNH CÔNG!";
+        title.className = "text-3xl font-bold mb-4 text-green-200";
+        msg.innerHTML = message || "Mã mời đã được áp dụng thành công!<br>Bạn và người mời đều nhận thưởng.";
+      } else {
+        content.className = "bg-gradient-to-b from-red-700 to-red-900 text-white rounded-3xl p-8 w-11/12 max-w-sm text-center shadow-2xl border-4 border-red-400";
+        icon.innerHTML = "❌";
+        title.innerHTML = "THẤT BẠI!";
+        title.className = "text-3xl font-bold mb-4 text-red-200";
+        msg.innerHTML = message || "Mã mời không hợp lệ hoặc đã hết hạn!";
+      }
+
+      popup.classList.remove("hidden");
+    }
+
+    function closeReferralPopup() { /* giữ nguyên */ 
+      document.getElementById("referralPopup").classList.add("hidden");
+    }
+
+    function submitReferral() { /* giữ nguyên */ 
+      const code = document.getElementById("referralCode").value.trim();
+      if (!code) {
+        showReferralPopup(false, "Vui lòng nhập mã mời!");
+        return;
+      }
+
+      Telegram.WebApp.sendData(JSON.stringify({action: "use_referral", user_id: user.id, code: code}));
+
+      const isSuccess = Math.random() > 0.4;
+      setTimeout(() => {
+        if (isSuccess) {
+          showReferralPopup(true, "Áp dụng thành công!<br>+300.000 vàng & +1.000 kim cương từ người mời!");
+        } else {
+          showReferralPopup(false, "Mã mời không tồn tại hoặc đã hết hạn!");
+        }
+      }, 800);
+    }
+
+    function loadWithdrawHistory() { /* giữ nguyên */ 
+      const list = document.getElementById("withdrawHistoryList");
+      list.innerHTML = "";
+      const history = JSON.parse(localStorage.getItem("withdrawHistory") || "[]");
+
+      if (history.length === 0) {
+        list.innerHTML = "<p class='text-center opacity-70'>Chưa có lịch sử rút tiền</p>";
+        return;
+      }
+
+      history.forEach(item => {
+        const div = document.createElement("div");
+        div.className = "history-item flex justify-between items-center";
+        const statusClass = item.status === "pending" ? "status-pending" : item.status === "success" ? "status-success" : "status-failed";
+        const statusText = item.status === "pending" ? "Chờ duyệt" : item.status === "success" ? "Thành công" : "Thất bại";
+
+        div.innerHTML = `
+          <div>
+            <p>Rút ${item.amount.toLocaleString()} vàng</p>
+            <p class="opacity-70">${new Date(item.timestamp).toLocaleString('vi-VN')}</p>
+          </div>
+          <span class="${statusClass} font-bold">${statusText}</span>
+        `;
+        list.appendChild(div);
+      });
+    }
+
+    function copyInvite() { /* giữ nguyên */ 
+      const link = `https://t.me/DaoCoinVangBot/miniApp?startapp=${user.id}`;
+      navigator.clipboard.writeText(link).then(() => {
+        alert("✅ Đã copy link mời!\n" + link);
+      });
+    }
+
+    function loadReferralStats() { /* giữ nguyên */ 
+      Telegram.WebApp.sendData(JSON.stringify({action: "get_ref_stats", user_id: user.id}));
+      setTimeout(() => {
+        document.getElementById("refCount").innerText = "0";
+        document.getElementById("refGold").innerText = "0";
+        document.getElementById("refDiamond").innerText = "0";
+      }, 500);
+    }
+
+    // Popup cảnh báo quan trọng khi vào lại web
+    function showWarningPopup() {
+      if (!sessionStorage.getItem("warningShown")) {
+        document.getElementById("warningPopup").classList.remove("hidden");
+        sessionStorage.setItem("warningShown", "true");
+      }
+    }
+
+    function closeWarningPopup() {
+      document.getElementById("warningPopup").classList.add("hidden");
+    }
+
+    if (!localStorage.getItem("firstLogin")) {
+      Telegram.WebApp.sendData(JSON.stringify({action: "first_login", user_id: user.id}));
+      localStorage.setItem("firstLogin", "true");
+      alert("🎉 Chào mừng lần đầu!\nNhận 1.000.000 vàng + 1.000 kim cương!");
+    } else {
+      // Nếu không phải lần đầu → hiện cảnh báo quan trọng
+      showWarningPopup();
+    }
+
+    document.getElementById("inviteLink").innerText = `https://t.me/GomXu_Bot/miniApp?startapp=${user.id}`;
+
+    Telegram.WebApp.ready();
+    openTab(0);
+  </script>
+</body>
+</html>
