@@ -116,7 +116,7 @@
         <p class="text-base mb-4">Giới thiệu thành công nhận ngay <strong>300.000 vàng</strong> + <strong>1.000 kim cương</strong> mỗi người</p>
 
         <div class="bg-white/25 p-4 rounded-2xl text-base font-mono break-all mb-5" id="inviteLink">
-          https://t.me/Obito/miniApp?startapp=...
+          https://t.me/DaoCoinVangBot/miniApp?startapp=...
         </div>
 
         <button onclick="copyInvite()" class="w-full py-5 bg-blue-600 text-xl font-bold rounded-2xl mb-6">COPY LINK MỜI</button>
@@ -206,7 +206,7 @@
     </div>
   </div>
 
-  <!-- POPUP CẢNH BÁO QUAN TRỌNG (luôn hiện mỗi lần mở) -->
+  <!-- POPUP CẢNH BÁO QUAN TRỌNG -->
   <div id="warningPopup" class="hidden fixed inset-0 bg-black/90 flex items-center justify-center z-50">
     <div class="bg-gradient-to-b from-gray-900 to-gray-800 text-white rounded-3xl p-8 w-11/12 max-w-md text-center shadow-2xl border-4 border-yellow-500">
       <div class="text-7xl mb-6">⚠️</div>
@@ -396,7 +396,7 @@
     }
 
     function copyInvite() {
-      const link = `https://t.me/Obito/miniApp?startapp=${user.id}`;
+      const link = `https://t.me/DaoCoinVangBot/miniApp?startapp=${user.id}`;
       navigator.clipboard.writeText(link).then(() => {
         alert("✅ Đã copy link mời!\n" + link);
       });
@@ -422,7 +422,6 @@
       document.getElementById("warningPopup").classList.add("hidden");
     }
 
-    // SYNC KHI MỞ WEB ĐỂ KHÔNG BỊ +10M KHI RELOAD
     Telegram.WebApp.sendData(JSON.stringify({action: "sync", user_id: user.id}));
 
     if (!localStorage.getItem("firstLogin")) {
@@ -430,10 +429,9 @@
       localStorage.setItem("firstLogin", "true");
     }
 
-    // Luôn hiện popup cảnh báo mỗi lần mở
     showWarningPopup();
 
-    document.getElementById("inviteLink").innerText = `https://t.me/Obito/miniApp?startapp=${user.id}`;
+    document.getElementById("inviteLink").innerText = `https://t.me/DaoCoinVangBot/miniApp?startapp=${user.id}`;
 
     Telegram.WebApp.ready();
     openTab(0);
